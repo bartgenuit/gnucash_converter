@@ -1,6 +1,12 @@
-/nbproject/private/
+# Ignore python cache
 __pycache__/
+*.pyc
+
+# Ignore local development files
+.idea
+
+# Ignore various other files
+/nbproject/private/
 nbproject/
 teststuff/
-.idea
 icon.psd
