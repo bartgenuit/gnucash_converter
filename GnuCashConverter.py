@@ -23,13 +23,13 @@ class GnuCashConverter:
         :return: void
         '''
 
-        with open(source) as csvFile:
+        with open(source) as sourceFile:
             if bank == 'rabobank':
-                converter = rabobankConverter(csv.reader(csvFile, delimiter=',', quotechar='"'))
+                converter = rabobankConverter(csv.reader(sourceFile, delimiter=',', quotechar='"'))
             elif bank == 'rabobank (old)':
-                converter = rabobankTXTConverter(csv.reader(csvFile, delimiter=',', quotechar='"'))
+                converter = rabobankTXTConverter(csv.reader(sourceFile, delimiter=',', quotechar='"'))
             elif bank == 'ing':
-                converter = ingConverter(csv.reader(csvFile, delimiter=';', quotechar='"'))
+                converter = ingConverter(csv.reader(sourceFile, delimiter=';', quotechar='"'))
             else:
                 return False
 
