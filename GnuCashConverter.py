@@ -1,6 +1,7 @@
 import csv
 import datetime
 from decimal import *
+from collections import namedtuple
 import locale
 
 
@@ -30,6 +31,8 @@ class GnuCashConverter:
                 converter = rabobankTXTConverter(csv.reader(sourceFile, delimiter=',', quotechar='"'))
             elif bank == 'ing':
                 converter = ingConverter(csv.reader(sourceFile, delimiter=';', quotechar='"'))
+            elif bank == 'triodos':
+                converter = TriodosConverter(csv.reader(sourceFile, delimiter=',', quotechar='"'))
             else:
                 return False
 
@@ -370,6 +373,69 @@ class ingConverter(abstractConverter):
 
         return ''.join(c for c in message)
 
+class TriodosConverter(abstractConverter):
+    """
+    Converter for Triodos CSV format (2021)
+
+    This format contains no header, is comma-separated and has the following fields:
+    - date (dd-mm-yyyy)
+    - account (IBAN)
+    - amount (decimal, comma)
+    - direction (Debet, Credit)
+    - name counterparty
+    - account counterparty (BIC IBAN)
+    - transaction type (incasso, internetbanking, etc)
+    - description
+    """
+    triodos_decimal_separator = ','
+
+    TriodosRow = namedtuple('TriodosRow', [
+        'date',
+        'account',
+        'amount',
+        'direction',
+        'counter_name',
+        'counter_account',
+        'type',
+        'message',
+    ])
+
+    def parse_description(self, source_row: TriodosRow):
+        """
+        Helper to parse multiple fields into a single description line
+        """
+        messages = [
+            source_row.message,
+            source_row.counter_name,
+            source_row.counter_account,
+            source_row.type,
+        ]
+        description = ', '.join(s.strip() for s in messages if s.strip())
+        return description
+
+    def newRow(self, row, counter):
+        source_row = self.TriodosRow._make(row)
+
+        direction = source_row.direction.lower()
+        if direction == 'credit':
+            deposit = source_row.amount
+            withdrawal = 0
+        elif direction == 'debet':
+            deposit = 0
+            withdrawal = source_row.amount
+        else:
+            raise ValueError(f" Wrong value '{direction}' for field 4 (direction),"
+                             f" expecting either 'credit' or 'debet'.")
+
+        target_row = {
+            'account': source_row.account,
+            'date': datetime.datetime.strptime(source_row.date, "%d-%m-%Y").strftime("%Y-%m-%d"),
+            'deposit': deposit,
+            'withdrawal': withdrawal,
+            'message': self.parse_description(source_row),
+            'balance': 0,
+        }
+        return target_row
 
 def parseAmount(amount, amountSeperator):
     '''
