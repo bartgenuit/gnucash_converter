@@ -469,37 +469,6 @@ def parseAmount(amount, amountSeperator):
 
     return amountDecimal
 
-def parseAmount(amount, amountSeperator):
-    '''
-    Turn the amount as string into a decimal with the correct decimal seperator.
-    It uses the system locale to do this.
-
-    Return amount as Decimal if successful or None if not successful
-    '''
-
-    localeSeperator = locale.localeconv()['decimal_point']
-    amountDecimal = None
-
-    if amountSeperator == localeSeperator:
-        amountDecimal = Decimal(amount)
-
-    # Replace comma seperator to point seperator
-    if amountSeperator == ',':
-        amountPointSeperator = amount.replace(",", ".")
-        amountPointSeperator = amountPointSeperator.replace(
-            ".", "", amountPointSeperator.count(".")-1)
-
-        amountDecimal = Decimal(amountPointSeperator)
-
-    # Replace point seperator to point seperator
-    if amountSeperator == '.':
-        amountCommaSeperator = amount.replace(".", ",")
-        amountCommaSeperator = amountCommaSeperator.replace(
-            ",", "", amountCommaSeperator.count(","-1))
-
-        amountDecimal = Decimal(amountCommaSeperator)
-
-    return amountDecimal
 
 if __name__ == '__main__':
     converter = GnuCashConverter()
